@@ -16,9 +16,36 @@ const app = express();
 app.use((req, res, next) => { console.log('1. Reached Helmet'); next(); });
 app.use(helmet());
 app.use((req, res, next) => { console.log('2. Reached CORS'); next(); });
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://[::1]:3000',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+    'http://[::1]:5000'
+];
+
+const isLoopbackOrigin = (origin) => {
+    if (!origin) return false;
+    try {
+        const { hostname } = new URL(origin);
+
+        return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+    } catch (err) {
+        return false;
+    }
+};
+
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: (origin, callback) => {
+        // Allow mobile apps, server-to-server, and no-origin tools (curl/postman)
+        if (!origin || allowedOrigins.includes(origin) || isLoopbackOrigin(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS policy forbids this origin.'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key']
 }));
 

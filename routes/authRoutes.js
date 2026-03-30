@@ -4,6 +4,16 @@ const { registerUser, loginUser, getMe } = require('../controllers/authControlle
 const { protect } = require('../middlewares/authMiddleware');
 const { validate } = require('../middlewares/validateMiddleware');
 const { body } = require('express-validator');
+const rateLimit = require('express-rate-limit');
+
+// Login rate limiting
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many login attempts from this IP, please try again later.' }
+});
 
 // Validation rules
 const registerValidation = [
@@ -18,7 +28,7 @@ const loginValidation = [
 
 router.post('/register', validate(registerValidation), registerUser);
 
-router.post('/login', validate(loginValidation), loginUser);
+router.post('/login', loginLimiter, validate(loginValidation), loginUser);
 
 router.get('/me', protect, getMe);
 
