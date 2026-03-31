@@ -31,6 +31,10 @@ The server will run on `http://localhost:5000` by default.
 
 ### Installation
 1. Clone the repository and navigate to the backend directory.
+   ```
+   git clone <repository-url>
+   cd securesysbackend
+   ```
 2. Install dependencies:
    ```
    npm install
@@ -54,6 +58,30 @@ The server will run on `http://localhost:5000` by default.
 - For production: `npm start` (if configured)
 
 The server will start on the specified port, and the database models will be automatically synchronized.
+
+## Architecture Overview
+
+The system is built with a modular structure following the **MVC (Model-View-Controller)** pattern for the backend logic.
+
+- **Models**: Define the database schema using Sequelize ORM (PostgreSQL).
+- **Controllers**: Handle the business logic for Auth and Notes.
+- **Routes**: Define the API endpoints and map them to controllers.
+- **Middlewares**: Standardized processing for Authentication, Error Handling, Validation, and Idempotency.
+- **Utils**: Reusable helpers like the Logger (Winston).
+
+## Security Considerations Implemented
+
+This API implements multiple layers of security to ensure data integrity and protection:
+
+1.  **JWT Authentication**: Stateless authentication using JSON Web Tokens for secure session management.
+2.  **Password Hashing**: Passwords are never stored in plain text; they are hashed using `bcrypt` with a high salt factor.
+3.  **Security Headers**: Integrated `helmet` middleware to set various HTTP headers for protection against XSS and other common attacks.
+4.  **CORS Policy**: Configured to only allow requests from trusted origins.
+5.  **Rate Limiting**: Implemented `express-rate-limit` to protect against DoS and brute-force attacks on sensitive endpoints.
+6.  **Input Validation**: Strict validation and sanitization of all incoming request data using `express-validator`.
+7.  **IDOR Protection**: Every request to `/api/notes` is scoped to the authenticated user's ID, preventing users from accessing or modifying other users' data.
+8.  **Optimistic Locking**: Prevents "lost updates" in concurrent environments by using a `version` field in the database.
+9.  **Idempotency Protection**: Supports `Idempotency-Key` headers for POST requests to ensure safe retries without side effects.
 
 ## Authentication API endpoints
 
